@@ -2,8 +2,9 @@
 import random
 
 def generate_coin_tosses(p_success = 0.5, n_trials = 100):
-	"""Generate a sequence of coin tosses, with heads distributed according ti
-	specified success probability.
+	"""
+	Generates a sequence of coin tosses, with heads distributed according to
+	a specified success probability.
 	
 	Parameters
 	----------
@@ -15,8 +16,7 @@ def generate_coin_tosses(p_success = 0.5, n_trials = 100):
 	Returns
 	-------
 	outcomes : list
-		A list of length n_trais, where each element of this list if either H or T
-
+		A list of length n_trails, where each element of this list if either H or T
 	"""
 	
 	outcomes = []
@@ -24,12 +24,10 @@ def generate_coin_tosses(p_success = 0.5, n_trials = 100):
 		r = random.uniform(0, 1)
 		if r < p_success:
 			outcomes.append("H")
-			heads += 1
+			#heads += 1
 		else:
 			outcomes.append("T")
 	return outcomes
 
-def kelly_1D(outcomes, p, bankroll):
-	
-
-tosses = generate_coin_tosses(p_success = 0.55, n_trials = 10000)
+#def kelly_1D(outcomes, p, bankroll):
+#	tosses = generate_coin_tosses(p_success = 0.55, n_trials = 10000)
