@@ -2,7 +2,10 @@
 A set of rough functions to play around with, that may later be incorporated into a class.
 """
 
-def kelly(p,a=1.0,b=1.0):
+import numpy as np
+import itertools
+
+def Kelly(p,a=1.0,b=1.0):
     """
     Function that returns the kelly fraction for a bet of probability p of winning, and probability 1-p of losing.
     Upon losing, a player wins b times the amount bet, and loses a times the amount bet.
