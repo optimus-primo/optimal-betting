@@ -55,6 +55,28 @@ def kelly_fraction(p,a=1.0,b=1.0):
     m = b*p - a*(1-p)
     return float(m)/float(a)/float(b)	
 
+def wealth_afer_n(initial_wealth, n_success, n_failure, kelly_fraction):
+	"""
+	Returns the amount of wealth after n trials, resulting from betting using Kelly criterion
+	Parameters
+	----------
+	initial_wealth: float
+		The initial amount of wealth
+	n_success: int
+		Number of successes in n trials
+	n_failure: int
+		Number of failurs in n trials
+	kelly_fraction: float
+		The value of kelly fraction
+
+	Returns
+	-------
+	x_n: float
+		Amount of wealth after n (where n = n_sucess + n_failure) trials
+	"""
+	x_n = initial_wealth*((1 + kelly_fraction)**n_success)*((1 - kelly_fraction)**n_failure)
+	return x_n
+
 def expected_log_return(p, f, a=1.0, b=1.0):
 	"""
 	Calculates expected log return per trial (g). This is given by:
@@ -73,28 +95,99 @@ def expected_log_return(p, f, a=1.0, b=1.0):
 
     Returns
     -------
-    The expectation of the log growth rate of bankroll
+    g: float
+	    The expectation of the log growth rate of bankroll
 	"""
 
 	g = ((1-p)*np.log10(1 - a*f)) + (p*np.log10(1 + b*f))
-
 	return g
 
-n = 10000
-p = 0.55
-a = 1.0
-b = 2.0
+def variance_log_return(p, f, a=1.0, b=1.0):
+	"""
+	Calculates the variance log return. This is given by:
+	s^2 = p*q*{ln[(1 + a*f)/(1 - b*f)]}^2
 
-k_f = kelly_fraction(p, a, b)
-g = expected_log_return(p, k_f, a, b)
-print "Calculated Kelly fraction: ", k_f
-print "Calculated expected growth rate: ", g
+	Parameters
+	----------
+    p: float
+        The probability of winning the bet
+    a: float
+        The factor the amount bet will multiplied by upon losing
+    b: float
+        The factor the amount bet will multiplied by upon winning
+    f: float
+    	Fraction of bankroll to bet
 
-test_fractions = np.arange(0.0, 1.0, 0.025)
-test_rates = [expected_log_return(p, i, a, b) for i in test_fractions]
+    Returns
+    -------
+    The variance of the log growth rate of bankroll
+	"""
+	s_squared = p*(1-p)*((np.log((1 + a*f)/(1 - b*f)))**2)
+	return s_squared
 
-test_kelly = test_fractions[test_rates.index(max(test_rates))]
-print "Estimated fraction that maximized log growth rate: ", test_kelly
-plt.plot(test_fractions, test_rates, 'o')
-#plt.show()
-plt.savefig("test_g.png")
+def probability_reaching_target(target, n_trials):
+	"""
+	Returns the probability of reaching a target wealth on or before n trials, when betting using Kelly criterion
+
+	Parameters
+	----------
+	target: float
+		The value of target wealth
+	n: int
+		The number of trials on or before which target wealth is reached 
+	
+	"""
+
+
+def probability_exceeding_target(target, n_trials):
+	"""
+	Returns the probability of having wealth euqal to or more than the target amount at the end of n_trials 
+	Parameters
+	----------
+	target: float
+		The value of target wealth
+	n: int
+		The number of trials on or before which target wealth is reached 
+
+	"""
+
+
+def probability_fractional_loss(fraction):
+	"""
+	Returns the probability of being reduced to a given fraction of the initial wealth
+	Parameters
+	----------
+	fraction: float
+		The fraction of initial wealth left after betting
+	"""
+
+
+def test_growth_rate(n, p, a, b):
+	k_f = kelly_fraction(p, a, b)
+	g = expected_log_return(p, k_f, a, b)
+	print "Calculated Kelly fraction: ", k_f
+	print "Calculated expected growth rate: ", g
+
+	test_fractions = np.arange(0.0, 1.0, 0.025)
+	test_rates = [expected_log_return(p, i, a, b) for i in test_fractions]
+
+	test_kelly = test_fractions[test_rates.index(max(test_rates))]
+	print "Estimated fraction that maximized log growth rate: ", test_kelly
+	plt.plot(test_fractions, test_rates, 'o')
+	#plt.show()
+	plt.savefig("test_g.png")
+
+
+
+
+
+def main():
+	"""
+	Run various test to check these functions
+	"""
+
+	n = 10000
+	p = 0.55
+	a = 1.0
+	b = 2.0
+	#test_growth_rate(n, p, a, b)
