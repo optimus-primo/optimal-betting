@@ -149,12 +149,9 @@ def probability_reaching_target(target = 2, n_trials = 10000):
 	a = -g/s_squared
 	alpha = (-g*(np.sqrt(n_trials)))/np.sqrt(s_squared)
 	beta = np.log(target)/(np.sqrt(s_squared)*np.sqrt(n_trials))
-	N1 = norm(s_squared, T)
-	u = np.sqrt(s_squared) - 2*b
-	N2 = norm(u, T)
-	
-	prob = N1.pdf(-alpha - beta) + (np.exp(-2.0*a*b))*N2.pdf(alpha - beta)
-	#print prob
+	N = norm(0.0, T)
+	prob = N.pdf(-alpha - beta) + (np.exp(-2.0*a*b))*N.pdf(alpha - beta)
+	print prob
 	
 
 def probability_exceeding_target(target = 2, n_trials = 10000):
