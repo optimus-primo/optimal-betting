@@ -2,6 +2,7 @@
 import random
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.stats import norm
 
 
 def generate_coin_tosses(p_success = 0.5, n_trials = 100):
@@ -98,8 +99,9 @@ def expected_log_return(p, f, a=1.0, b=1.0):
     g: float
 	    The expectation of the log growth rate of bankroll
 	"""
-
-	g = ((1-p)*np.log10(1 - a*f)) + (p*np.log10(1 + b*f))
+	#FIXME: Decide if we should use log or ln
+	#g = ((1-p)*np.log10(1 - a*f)) + (p*np.log10(1 + b*f))
+	g = ((1-p)*np.log(1 - a*f)) + (p*np.log(1 + b*f))
 	return g
 
 def variance_log_return(p, f, a=1.0, b=1.0):
@@ -125,7 +127,7 @@ def variance_log_return(p, f, a=1.0, b=1.0):
 	s_squared = p*(1-p)*((np.log((1 + a*f)/(1 - b*f)))**2)
 	return s_squared
 
-def probability_reaching_target(target, n_trials):
+def probability_reaching_target(target = 2, n_trials = 10000):
 	"""
 	Returns the probability of reaching a target wealth on or before n trials, when betting using Kelly criterion
 
@@ -137,9 +139,25 @@ def probability_reaching_target(target, n_trials):
 		The number of trials on or before which target wealth is reached 
 	
 	"""
+	p = 0.51
+	k_f = kelly_fraction(p)
+	g = expected_log_return(p, k_f)
+	s_squared = variance_log_return(p, k_f)
 
+	T = s_squared*n_trials
+	b = np.log(target)
+	a = -g/s_squared
+	alpha = (-g*(np.sqrt(n_trials)))/np.sqrt(s_squared)
+	beta = np.log(target)/(np.sqrt(s_squared)*np.sqrt(n_trials))
+	N1 = norm(s_squared, T)
+	u = np.sqrt(s_squared) - 2*b
+	N2 = norm(u, T)
+	
+	prob = N1.pdf(-alpha - beta) + (np.exp(-2.0*a*b))*N2.pdf(alpha - beta)
+	#print prob
+	
 
-def probability_exceeding_target(target, n_trials):
+def probability_exceeding_target(target = 2, n_trials = 10000):
 	"""
 	Returns the probability of having wealth euqal to or more than the target amount at the end of n_trials 
 	Parameters
@@ -151,6 +169,21 @@ def probability_exceeding_target(target, n_trials):
 
 	"""
 
+	p = 0.51
+	k_f = kelly_fraction(p)
+	k_f = 0.0117
+	g = expected_log_return(p, k_f)
+	s_squared = variance_log_return(p, k_f)
+
+	T = s_squared*n_trials
+	b = np.log(target)
+	a = -g/s_squared
+	alpha = (-g*(np.sqrt(n_trials)))/np.sqrt(s_squared)
+	beta = np.log(target)/(np.sqrt(s_squared)*np.sqrt(n_trials))
+	N = norm(0.0, T)
+	prob = N.pdf(-alpha - beta)
+	print prob
+
 
 def probability_fractional_loss(fraction):
 	"""
@@ -161,6 +194,12 @@ def probability_fractional_loss(fraction):
 		The fraction of initial wealth left after betting
 	"""
 
+	p = 0.51
+	k_f = kelly_fraction(p)
+	g = expected_log_return(p, k_f)
+	s_squared = variance_log_return(p, k_f)
+	prob = fraction**((2*g)/s_squared)
+	print prob
 
 def test_growth_rate(n, p, a, b):
 	k_f = kelly_fraction(p, a, b)
@@ -191,3 +230,9 @@ def main():
 	a = 1.0
 	b = 2.0
 	#test_growth_rate(n, p, a, b)
+	probability_reaching_target()
+	probability_exceeding_target()
+	probability_fractional_loss(0.5)
+
+if __name__ == '__main__':
+	main()
