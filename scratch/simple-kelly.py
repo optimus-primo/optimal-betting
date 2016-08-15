@@ -149,8 +149,10 @@ def probability_reaching_target(target = 2, n_trials = 10000):
 	a = -g/s_squared
 	alpha = (-g*(np.sqrt(n_trials)))/np.sqrt(s_squared)
 	beta = np.log(target)/(np.sqrt(s_squared)*np.sqrt(n_trials))
-	N = norm(0.0, T)
-	prob = N.pdf(-alpha - beta) + (np.exp(-2.0*a*b))*N.pdf(alpha - beta)
+	N = norm(0.0, 1.0)
+	
+
+	prob = (1 - N.cdf(alpha + beta)) + (np.exp(-2.0*a*b))*N.cdf(alpha - beta)
 	print prob
 	
 
@@ -168,7 +170,7 @@ def probability_exceeding_target(target = 2, n_trials = 10000):
 
 	p = 0.51
 	k_f = kelly_fraction(p)
-	k_f = 0.0117
+	#k_f = 0.0117
 	g = expected_log_return(p, k_f)
 	s_squared = variance_log_return(p, k_f)
 
@@ -177,8 +179,9 @@ def probability_exceeding_target(target = 2, n_trials = 10000):
 	a = -g/s_squared
 	alpha = (-g*(np.sqrt(n_trials)))/np.sqrt(s_squared)
 	beta = np.log(target)/(np.sqrt(s_squared)*np.sqrt(n_trials))
-	N = norm(0.0, T)
-	prob = N.pdf(-alpha - beta)
+	N = norm(0.0, 1.0)
+	
+	prob = 1 - N.cdf(alpha + beta)
 	print prob
 
 
