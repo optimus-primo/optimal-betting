@@ -1,9 +1,13 @@
 #!/usr/local/bin/env python
 import random
 import numpy as np
+import numpy.testing as npt
 import matplotlib.pyplot as plt
 from scipy.stats import norm
 
+"""
+A set of rough functions to play around with, that may later be incorporated into a class.
+"""
 
 def generate_coin_tosses(p_success = 0.5, n_trials = 100):
 	"""
@@ -33,9 +37,6 @@ def generate_coin_tosses(p_success = 0.5, n_trials = 100):
 			outcomes.append("T")
 	return outcomes
 
-"""
-A set of rough functions to play around with, that may later be incorporated into a class.
-"""
 
 def kelly_fraction(p,a=1.0,b=1.0):
     """
@@ -127,19 +128,20 @@ def variance_log_return(p, f, a=1.0, b=1.0):
 	s_squared = p*(1-p)*((np.log((1 + a*f)/(1 - b*f)))**2)
 	return s_squared
 
-def probability_reaching_target(target = 2, n_trials = 10000):
+def probability_reaching_target(p, target, n_trials):
 	"""
 	Returns the probability of reaching a target wealth on or before n trials, when betting using Kelly criterion
 
 	Parameters
 	----------
+    p: float
+        The probability of winning the bet
 	target: float
 		The value of target wealth
 	n: int
 		The number of trials on or before which target wealth is reached 
 	
 	"""
-	p = 0.51
 	k_f = kelly_fraction(p)
 	g = expected_log_return(p, k_f)
 	s_squared = variance_log_return(p, k_f)
@@ -153,14 +155,16 @@ def probability_reaching_target(target = 2, n_trials = 10000):
 	
 
 	prob = (1 - N.cdf(alpha + beta)) + (np.exp(-2.0*a*b))*N.cdf(alpha - beta)
-	print prob
+	return prob
 	
 
-def probability_exceeding_target(target = 2, n_trials = 10000):
+def probability_exceeding_target(p, target, n_trials):
 	"""
 	Returns the probability of having wealth euqal to or more than the target amount at the end of n_trials 
 	Parameters
 	----------
+    p: float
+        The probability of winning the bet
 	target: float
 		The value of target wealth
 	n: int
@@ -168,9 +172,7 @@ def probability_exceeding_target(target = 2, n_trials = 10000):
 
 	"""
 
-	p = 0.51
 	k_f = kelly_fraction(p)
-	#k_f = 0.0117
 	g = expected_log_return(p, k_f)
 	s_squared = variance_log_return(p, k_f)
 
@@ -182,24 +184,25 @@ def probability_exceeding_target(target = 2, n_trials = 10000):
 	N = norm(0.0, 1.0)
 	
 	prob = 1 - N.cdf(alpha + beta)
-	print prob
+	return prob
 
 
-def probability_fractional_loss(fraction):
+def probability_fractional_loss(fraction, p):
 	"""
 	Returns the probability of being reduced to a given fraction of the initial wealth
 	Parameters
 	----------
+    p: float
+        The probability of winning the bet
 	fraction: float
 		The fraction of initial wealth left after betting
 	"""
 
-	p = 0.51
 	k_f = kelly_fraction(p)
 	g = expected_log_return(p, k_f)
 	s_squared = variance_log_return(p, k_f)
 	prob = fraction**((2*g)/s_squared)
-	print prob
+	return prob
 
 def test_growth_rate(n, p, a, b):
 	k_f = kelly_fraction(p, a, b)
@@ -214,11 +217,7 @@ def test_growth_rate(n, p, a, b):
 	print "Estimated fraction that maximized log growth rate: ", test_kelly
 	plt.plot(test_fractions, test_rates, 'o')
 	#plt.show()
-	plt.savefig("test_g.png")
-
-
-
-
+	#plt.savefig("test_g.png")
 
 def main():
 	"""
@@ -229,10 +228,10 @@ def main():
 	p = 0.55
 	a = 1.0
 	b = 2.0
-	#test_growth_rate(n, p, a, b)
-	probability_reaching_target()
-	probability_exceeding_target()
-	probability_fractional_loss(0.5)
+	test_growth_rate(n, p, a, b)
+	npt.assert_almost_equal(probability_reaching_target(0.51, 2, n), 0.9214, decimal=4, err_msg="Couldn't reproduce example from book.")
+	npt.assert_almost_equal(probability_exceeding_target(0.51, 2, n), 0.7433, decimal=4, err_msg="Couldn't reproduce example from book.")
+	npt.assert_almost_equal(probability_fractional_loss(0.7, 0.51), 0.7, decimal=1, err_msg="Couldn't reproduce example from book.")
 
 if __name__ == '__main__':
 	main()
