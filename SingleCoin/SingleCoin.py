@@ -4,15 +4,14 @@ from scipy.stats import norm
 
 class SingleCoinBetting(object):
     """
-    TODO: tidy up this
     Class to sample and predict the optimal kelly betting fraction for repeated betting.
 
-    The game is fixed: i.e. the game consists of probability of winning, and the payoffs. The purpose of this class is
+    The game is fixed, and consists of probability of winning, and the payoffs. The purpose of this class is
     to find out the properties of the various betting strategies (fractions) that one can make.
 
     Some notation based on Thorpe Chapter...
     """
-    def __init__(self,p=0.6, a=1.0, b=1.0, initial_wealth=100.0):
+    def __init__(self,p=0.6, a=1.0, b=1.0, initial_logwealth=1.0):
         """
         Initialize class.
 
@@ -28,7 +27,7 @@ class SingleCoinBetting(object):
             The factor the amount bet will multiplied by upon winning
         """
         self.p = float(p)
-        self.initial_wealth = float(initial_wealth)
+        self.logwealth = float(initial_logwealth)
         self.a = float(a)
         self.b = float(b)
 
@@ -53,6 +52,8 @@ class SingleCoinBetting(object):
         """
         Calculates the maximum one should bet before the fraction will lead to ruin
 
+        Delete if not interesting
+
         Return
         ------
         """
@@ -76,7 +77,6 @@ class SingleCoinBetting(object):
         """
         if f is None:
             f = self.f_kelly
-
         # FIXME: Decide if we should use log or ln
         # g = ((1-p)*np.log10(1 - a*f)) + (p*np.log10(1 + b*f))
         g = ((1 - self.p) * np.log(1 - self.a * f)) + (self.p * np.log(1 + self.b * f))
@@ -128,15 +128,17 @@ class SingleCoinBetting(object):
             g = self.expected_log_return(f)
             g_var = self.variance_log_return(f)
 
-        #TODO: account for initial wealth
+
+
+        #TODO: check if initial wealth has been properly accounted for
         alpha = (-g * (np.sqrt(n_trials))) / np.sqrt(g_var)
-        beta = np.log(target) / (np.sqrt(g_var) * np.sqrt(n_trials))
+        beta = (np.log(target)-self.logwealth) / (np.sqrt(g_var) * np.sqrt(n_trials))
         N = norm(0.0, 1.0)
 
-        prob = (1 - N.cdf(alpha + beta)) + (np.exp(-2.0 * a * b)) * N.cdf(alpha - beta)
+        prob = (1 - N.cdf(alpha + beta)) + (np.exp(-2.0 * self.a * self.b)) * N.cdf(alpha - beta)
         return prob
 
-    def probability_exceeding_target(self, target, n_trials, f=None):
+    def prob_exceeding_target(self, target, n_trials, f=None):
         """
         Returns the probability of having wealth equal to or more than the target amount at the end of n_trials
 
@@ -162,15 +164,15 @@ class SingleCoinBetting(object):
             g_var = self.variance_log_return(f)
 
 
-        #TODO: account for initial wealth
+        #TODO: check if initial wealth has been properly accounted for
         alpha = (-g * (np.sqrt(n_trials))) / np.sqrt(g_var)
-        beta = np.log(target) / (np.sqrt(g_var) * np.sqrt(n_trials))
+        beta = (np.log(target)-self.logwealth) / (np.sqrt(g_var) * np.sqrt(n_trials))
         N = norm(0.0, 1.0)
 
         prob = 1 - N.cdf(alpha + beta)
         return prob
 
-    def probability_fractional_loss(self,f=None):
+    def prob_fractional_loss(self,f=None):
         """
         Returns the probability of being reduced to a given fraction of the initial wealth
 
@@ -199,7 +201,48 @@ class SingleCoinBetting(object):
 
         return prob
 
-    def wealth_afer_n(initial_wealth, n_success, n_failure, kelly_fraction):
-        pass
+    def gamble(self, n_trails, f):
+        """
+        Runs a series of random trials where a fraction of wealth is bet at each trial and returns the log of the
+        remain wealth
 
-        # Generator function?
+        Parameters
+        ----------
+        n_trails: int
+            the number of random trials
+        f: float
+            the fraction of wealth bet at each trial
+
+        Returns
+        -------
+        logwealth: float
+            the log of the wealth after n_trails
+        """
+
+        if f is None:
+            f = self.f_kelly
+
+        outcomes = np.random.choice((-1, 1),size=n_trails,p=(1-self.p, self.p))
+        self.logwealth = self.logwealth + np.sum(np.log(1+outcomes*f))
+
+        return self.logwealth
+
+    def predict_gamble(self, n_trails, f):
+        """
+        Predict (estimate) the logarithm of wealth after a series of random trials where a fraction of wealth is bet
+        at each trial.
+
+        Parameters
+        ----------
+        n_trails: int
+            the number of random trials
+        f: float
+            the fraction of wealth bet at each trial
+
+        Returns
+        -------
+        logwealth: float
+            the expected log of the wealth after n_trials
+        """
+
+        return self.logwealth + n_trails * self.expected_log_return(f)
