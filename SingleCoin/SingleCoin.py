@@ -11,7 +11,7 @@ class SingleCoinBetting(object):
 
     Some notation based on Thorpe Chapter...
     """
-    def __init__(self,p=0.6, a=1.0, b=1.0, initial_logwealth=1.0):
+    def __init__(self,p=0.6, a=1.0, b=1.0, initial_logwealth = 0.0):
         """
         Initialize class.
 
@@ -19,8 +19,8 @@ class SingleCoinBetting(object):
         ----------
         p: float
             the probability of drawing heads and winning in a coin toss
-        initial_wealth: float
-            the initial wealth of the player
+        initial_logwealth: float
+            the log of the initial wealth of the player
         a: float
             The factor the amount bet will multiplied by upon losing
         b: float
@@ -48,17 +48,6 @@ class SingleCoinBetting(object):
         m = self.b * self.p - self.a * (1 - self.p)
         return m / self.a / self.b
 
-    def max_fraction(self):
-        """
-        Calculates the maximum one should bet before the fraction will lead to ruin
-
-        Delete if not interesting
-
-        Return
-        ------
-        """
-        pass
-
     def expected_log_return(self, f=None):
         """
         Calculates expected log return per trial (g). This is given by:
@@ -68,7 +57,7 @@ class SingleCoinBetting(object):
         Parameter
         ---------
         f: float
-            Fraction of bankroll to bet
+            Fraction of wealth that will be bet
 
         Returns
         -------
@@ -82,7 +71,7 @@ class SingleCoinBetting(object):
         g = ((1 - self.p) * np.log(1 - self.a * f)) + (self.p * np.log(1 + self.b * f))
         return g
 
-    def variance_log_return(self, p=None, f=None, a=None, b=None):
+    def variance_log_return(self, f=None):
         """
         Calculates the variance log return. This is given by:
         s^2 = p*q*{ln[(1 + a*f)/(1 - b*f)]}^2
@@ -90,7 +79,7 @@ class SingleCoinBetting(object):
         Parameter
         ---------
         f: float
-        	Fraction of bankroll to bet
+        	the fraction that will be bet
 
         Returns
         -------
@@ -100,21 +89,21 @@ class SingleCoinBetting(object):
         if f is None:
             f = self.f_kelly
 
-        s_squared = self.p * (1 - self.p) * ((np.log((1 + self.a * f) / (1 - self.b * f))) ** 2)
-        return s_squared
+        g_var = self.p * (1 - self.p) * ((np.log((1 + self.a * f) / (1 - self.b * f))) ** 2)
+        return g_var
 
     def prob_reaching_target(self,target, n_trials, f=None):
         """
         Returns the probability of reaching a target wealth on or before n trials, when betting using Kelly criterion
 
         Parameters
-        ----------s
+        ----------
         target: float
             The value of target wealth
-        n: int
+        n_trails: int
             The number of trials on or before which target wealth is reached
         f: float
-            The fraction of ones wealth that will be bet at each round
+            The fraction of wealth that will be bet at each round
 
         Returns
         -------
@@ -128,14 +117,15 @@ class SingleCoinBetting(object):
             g = self.expected_log_return(f)
             g_var = self.variance_log_return(f)
 
-
-
-        #TODO: check if initial wealth has been properly accounted for
+        x = np.log(target)
+        y = -g / g_var
+        #TODO: check if initial wealth has been properly accounted for.
+        # Can output probabilities greater than 1.
         alpha = (-g * (np.sqrt(n_trials))) / np.sqrt(g_var)
-        beta = (np.log(target)-self.logwealth) / (np.sqrt(g_var) * np.sqrt(n_trials))
+        beta = (np.log(target)- self.logwealth) / (np.sqrt(g_var) * np.sqrt(n_trials))
         N = norm(0.0, 1.0)
 
-        prob = (1 - N.cdf(alpha + beta)) + (np.exp(-2.0 * self.a * self.b)) * N.cdf(alpha - beta)
+        prob = (1 - N.cdf(alpha + beta)) + (np.exp(-2.0 * x * y)) * N.cdf(alpha - beta)
         return prob
 
     def prob_exceeding_target(self, target, n_trials, f=None):
@@ -144,13 +134,12 @@ class SingleCoinBetting(object):
 
         Parameters
         ----------
-        p: float
-            The probability of winning the bet
         target: float
             The value of target wealth
-        n: int
-        The number of trials on or before which target wealth is reached
-
+        n_trials: int
+            The number of trials on or before which target wealth is reached
+        f: float
+            The fraction of wealth bet at each round
         Returns
         -------
         prob: float
@@ -172,16 +161,16 @@ class SingleCoinBetting(object):
         prob = 1 - N.cdf(alpha + beta)
         return prob
 
-    def prob_fractional_loss(self,f=None):
+    def prob_fractional_loss(self,target_fraction,f=None):
         """
         Returns the probability of being reduced to a given fraction of the initial wealth
 
         Parameters
         ----------
-        p: float
-            The probability of winning the bet
-        fraction: float
-            The fraction of initial wealth left after betting
+        target_fraction: float
+            The fraction of wealth for which the probability of occurrence will be calculated for
+        f: float
+            The fraction of wealth bet at each round
 
         Returns
         -------
@@ -197,7 +186,7 @@ class SingleCoinBetting(object):
             g_var = self.variance_log_return(f)
 
         #TODO: account for initial wealth
-        prob = f ** ((2 * g) / g_var)
+        prob = target_fraction ** ((2 * g) / g_var)
 
         return prob
 
@@ -246,3 +235,21 @@ class SingleCoinBetting(object):
         """
 
         return self.logwealth + n_trails * self.expected_log_return(f)
+
+def main():
+    """
+    Run various test to check these functions
+    """
+    coin = SingleCoinBetting(p=0.51,initial_logwealth=0)
+    n_trails = 10000
+
+    npt.assert_almost_equal(coin.prob_reaching_target(2, n_trails), 0.9214, decimal=4,
+                            err_msg="Couldn't reproduce example from book.")
+    npt.assert_almost_equal(coin.prob_exceeding_target(2, n_trails), 0.7433, decimal=4,
+                            err_msg="Couldn't reproduce example from book.")
+    npt.assert_almost_equal(coin.prob_fractional_loss(target_fraction=0.7), 0.7, decimal=1,
+                            err_msg="Couldn't reproduce example from book.")
+
+if __name__ == '__main__':
+    import numpy.testing as npt
+    main()
