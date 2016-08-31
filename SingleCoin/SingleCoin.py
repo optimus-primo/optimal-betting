@@ -211,7 +211,7 @@ class SingleCoinBetting(object):
         if f is None:
             f = self.f_kelly
 
-        outcomes = np.random.choice((-1, 1),size=n_trails,p=(1-self.p, self.p))
+        outcomes = np.random.choice((-self.a, self.b),size=n_trails,p=(1-self.p, self.p))
         self.logwealth = self.logwealth + np.sum(np.log(1+outcomes*f))
 
         return self.logwealth
