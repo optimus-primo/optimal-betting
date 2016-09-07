@@ -190,7 +190,7 @@ class SingleCoinBetting(object):
 
         return prob
 
-    def gamble(self, n_trails, f):
+    def gamble(self, n_trails, f=None):
         """
         Runs a series of random trials where a fraction of wealth is bet at each trial and returns the log of the
         remain wealth
@@ -213,7 +213,7 @@ class SingleCoinBetting(object):
 
         outcomes = np.random.choice((-self.a, self.b),size=n_trails,p=(1-self.p, self.p))
         self.logwealth = self.logwealth + np.sum(np.log(1+outcomes*f))
-
+        
         return self.logwealth
 
     def predict_gamble(self, n_trails, f):
@@ -234,7 +234,7 @@ class SingleCoinBetting(object):
             the expected log of the wealth after n_trials
         """
 
-        return self.logwealth + n_trails * self.expected_log_return(f)
+        return self.logwealth + (n_trails * self.expected_log_return(f))
 
 def main():
     """
