@@ -122,7 +122,8 @@ class SingleCoinBetting(object):
         #TODO: check if initial wealth has been properly accounted for.
         # Can output probabilities greater than 1.
         alpha = (-g * (np.sqrt(n_trials))) / np.sqrt(g_var)
-        beta = (np.log(target)- self.logwealth) / (np.sqrt(g_var) * np.sqrt(n_trials))
+        #beta = (np.log(target) - self.logwealth) / (np.sqrt(g_var) * np.sqrt(n_trials))
+        beta = (np.log(target)) / (np.sqrt(g_var) * np.sqrt(n_trials))
         N = norm(0.0, 1.0)
 
         prob = (1 - N.cdf(alpha + beta)) + (np.exp(-2.0 * x * y)) * N.cdf(alpha - beta)
@@ -190,7 +191,7 @@ class SingleCoinBetting(object):
 
         return prob
 
-    def gamble(self, n_trails, f):
+    def gamble(self, n_trails, f=None):
         """
         Runs a series of random trials where a fraction of wealth is bet at each trial and returns the log of the
         remain wealth
@@ -213,7 +214,7 @@ class SingleCoinBetting(object):
 
         outcomes = np.random.choice((-self.a, self.b),size=n_trails,p=(1-self.p, self.p))
         self.logwealth = self.logwealth + np.sum(np.log(1+outcomes*f))
-
+        
         return self.logwealth
 
     def predict_gamble(self, n_trails, f):
@@ -234,7 +235,7 @@ class SingleCoinBetting(object):
             the expected log of the wealth after n_trials
         """
 
-        return self.logwealth + n_trails * self.expected_log_return(f)
+        return self.logwealth + (n_trails * self.expected_log_return(f))
 
 def main():
     """
