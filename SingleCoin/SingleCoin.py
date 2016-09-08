@@ -122,7 +122,7 @@ class SingleCoinBetting(object):
         #TODO: check if initial wealth has been properly accounted for.
         # Can output probabilities greater than 1.
         alpha = (-g * (np.sqrt(n_trials))) / np.sqrt(g_var)
-        #beta = (np.log(target)- self.logwealth) / (np.sqrt(g_var) * np.sqrt(n_trials))
+        #beta = (np.log(target) - self.logwealth) / (np.sqrt(g_var) * np.sqrt(n_trials))
         beta = (np.log(target)) / (np.sqrt(g_var) * np.sqrt(n_trials))
         N = norm(0.0, 1.0)
 
