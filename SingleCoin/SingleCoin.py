@@ -119,12 +119,10 @@ class SingleCoinBetting(object):
 
         x = np.log(target)
         y = -g / g_var
-        #TODO: check if initial wealth has been properly accounted for.
-        # Can output probabilities greater than 1.
+
         alpha = (-g * (np.sqrt(n_trials))) / np.sqrt(g_var)
-        #beta = (np.log(target) - self.logwealth) / (np.sqrt(g_var) * np.sqrt(n_trials))
-        beta = (np.log(target)) / (np.sqrt(g_var) * np.sqrt(n_trials))
-        N = norm(0.0, 1.0)
+        beta = np.log(target) / (np.sqrt(g_var) * np.sqrt(n_trials))
+        N = norm(self.logwealth, 1.0)
 
         prob = (1 - N.cdf(alpha + beta)) + (np.exp(-2.0 * x * y)) * N.cdf(alpha - beta)
         return prob
@@ -154,10 +152,9 @@ class SingleCoinBetting(object):
             g_var = self.variance_log_return(f)
 
 
-        #TODO: check if initial wealth has been properly accounted for
         alpha = (-g * (np.sqrt(n_trials))) / np.sqrt(g_var)
-        beta = (np.log(target)-self.logwealth) / (np.sqrt(g_var) * np.sqrt(n_trials))
-        N = norm(0.0, 1.0)
+        beta = np.log(target) / (np.sqrt(g_var) * np.sqrt(n_trials))
+        N = norm(self.logwealth, 1.0)
 
         prob = 1 - N.cdf(alpha + beta)
         return prob
