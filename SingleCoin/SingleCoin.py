@@ -100,7 +100,7 @@ class SingleCoinBetting(object):
         ----------
         target: float
             The value of target wealth
-        n_trails: int
+        n_trials: int
             The number of trials on or before which target wealth is reached
         f: float
             The fraction of wealth that will be bet at each round
@@ -122,7 +122,7 @@ class SingleCoinBetting(object):
 
         alpha = (-g * (np.sqrt(n_trials))) / np.sqrt(g_var)
         beta = np.log(target) / (np.sqrt(g_var) * np.sqrt(n_trials))
-        N = norm(self.logwealth, 1.0)
+        N = norm(self.logwealth/(np.sqrt(g_var) * np.sqrt(n_trials)), 1.0)
 
         prob = (1 - N.cdf(alpha + beta)) + (np.exp(-2.0 * x * y)) * N.cdf(alpha - beta)
         return prob
@@ -154,7 +154,7 @@ class SingleCoinBetting(object):
 
         alpha = (-g * (np.sqrt(n_trials))) / np.sqrt(g_var)
         beta = np.log(target) / (np.sqrt(g_var) * np.sqrt(n_trials))
-        N = norm(self.logwealth, 1.0)
+        N = norm(self.logwealth/(np.sqrt(g_var) * np.sqrt(n_trials)), 1.0)
 
         prob = 1 - N.cdf(alpha + beta)
         return prob
@@ -188,14 +188,14 @@ class SingleCoinBetting(object):
 
         return prob
 
-    def gamble(self, n_trails, f=None):
+    def gamble(self, n_trials, f=None):
         """
         Runs a series of random trials where a fraction of wealth is bet at each trial and returns the log of the
         remain wealth
 
         Parameters
         ----------
-        n_trails: int
+        n_trials: int
             the number of random trials
         f: float
             the fraction of wealth bet at each trial
@@ -203,25 +203,25 @@ class SingleCoinBetting(object):
         Returns
         -------
         logwealth: float
-            the log of the wealth after n_trails
+            the log of the wealth after n_trials
         """
 
         if f is None:
             f = self.f_kelly
 
-        outcomes = np.random.choice((-self.a, self.b),size=n_trails,p=(1-self.p, self.p))
+        outcomes = np.random.choice((-self.a, self.b),size=n_trials,p=(1-self.p, self.p))
         self.logwealth = self.logwealth + np.sum(np.log(1+outcomes*f))
         
         return self.logwealth
 
-    def predict_gamble(self, n_trails, f):
+    def predict_gamble(self, n_trials, initial_logwealth = None, f = None):
         """
         Predict (estimate) the logarithm of wealth after a series of random trials where a fraction of wealth is bet
         at each trial.
 
         Parameters
         ----------
-        n_trails: int
+        n_trials: int
             the number of random trials
         f: float
             the fraction of wealth bet at each trial
@@ -231,19 +231,21 @@ class SingleCoinBetting(object):
         logwealth: float
             the expected log of the wealth after n_trials
         """
+        if initial_logwealth is None:
+            initial_logwealth = self.logwealth
 
-        return self.logwealth + (n_trails * self.expected_log_return(f))
+        return initial_logwealth + (n_trials * self.expected_log_return(f))
 
 def main():
     """
     Run various test to check these functions
     """
     coin = SingleCoinBetting(p=0.51,initial_logwealth=0)
-    n_trails = 10000
+    n_trials = 10000
 
-    npt.assert_almost_equal(coin.prob_reaching_target(2, n_trails), 0.9214, decimal=4,
+    npt.assert_almost_equal(coin.prob_reaching_target(2, n_trials), 0.9214, decimal=4,
                             err_msg="Couldn't reproduce example from book.")
-    npt.assert_almost_equal(coin.prob_exceeding_target(2, n_trails), 0.7433, decimal=4,
+    npt.assert_almost_equal(coin.prob_exceeding_target(2, n_trials), 0.7433, decimal=4,
                             err_msg="Couldn't reproduce example from book.")
     npt.assert_almost_equal(coin.prob_fractional_loss(target_fraction=0.7), 0.7, decimal=1,
                             err_msg="Couldn't reproduce example from book.")
