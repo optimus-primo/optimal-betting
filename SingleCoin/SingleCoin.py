@@ -188,7 +188,7 @@ class SingleCoinBetting(object):
 
         return prob
 
-    def gamble(self, n_trials, f=None):
+    def gamble(self, n_trials = 1, f=None):
         """
         Runs a series of random trials where a fraction of wealth is bet at each trial and returns the log of the
         remain wealth
