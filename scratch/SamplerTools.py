@@ -1,4 +1,5 @@
 import numpy as np
+from scipy import optimize
 import itertools
 
 class CoinFlipSampler(object):
@@ -93,7 +94,7 @@ class CoinFlipSampler(object):
             outcomes.append(self.states[rand_ind])
         return outcomes
 
-def expected_log_return(coins, fracs):
+def expected_log_return(fracs, coins, inverse=False):
     """
     Function to return the expected log return for a simultaneous coin flipping.
 
@@ -103,7 +104,9 @@ def expected_log_return(coins, fracs):
         contains the state space and the probabilities for each coin flip outcome
     fracs: list or array of floats
         the fraction of wealth bet on each coin. Must be the same length as the number of coins
-
+    inverse : bool
+        Boolean indicator for whether to return the negative expected log return, set to True
+        when optimization is required
     Returns
     -------
     g: float
@@ -118,4 +121,30 @@ def expected_log_return(coins, fracs):
     g = 0
     for p,s in zip(coins.probs,coins.states):
         g += p*np.log(1 + np.sum(np.array(s)*fracs))
-    return g
+    if inverse:
+        return -1.0 * g
+    else:
+        return g
+
+def optimal_kelly_fractions(coins, initial_guess):
+    """
+    Function to return numerically optimized kelly fractions for multiple coins
+    Parameters
+    ----------
+    coins: CoinFlipSampler object
+        contains the state space and the probabilities for each coin flip outcome
+    fracs: list or array of floats
+        the initial guess for the fraction of wealth bet on each coin. Must be the same length as the number of coins
+    TODO:
+    * If not preovided, should randomly generate guesses for each fraction
+    """
+
+    x0 = np.asarray(initial_guess) 
+    cons = ({'type': 'ineq', 'fun': lambda x: 1 - np.sum(x)})
+    b = (0.0, 1.0)
+    bnds = [b for i in range(len(initial_guess))]
+    inverse = True
+    fit = optimize.minimize(expected_log_return, x0, args=(coins, inverse), method='SLSQP', constraints=cons, bounds=bnds)
+    return fit.x
+
+
