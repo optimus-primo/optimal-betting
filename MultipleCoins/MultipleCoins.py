@@ -126,7 +126,7 @@ def expected_log_return(fracs, coins, inverse=False):
     else:
         return g
 
-def optimal_kelly_fractions(coins, initial_guess):
+def optimal_kelly_fractions(coins, initial_guess=None):
     """
     Function to return numerically optimized kelly fractions for multiple coins
     Parameters
@@ -138,13 +138,20 @@ def optimal_kelly_fractions(coins, initial_guess):
     TODO:
     * If not preovided, should randomly generate guesses for each fraction
     """
+    if initial_guess is not None:
+        initial_guess = np.asarray(initial_guess)
+    
+    else:
+        x = np.random.uniform(size=coins.ncoins - 1)
+        x = np.sort(x)
+        x = np.hstack((0, x, 1.0))
+        initial_guess = np.diff(x)/2.0
 
-    x0 = np.asarray(initial_guess) 
     cons = ({'type': 'ineq', 'fun': lambda x: 1 - np.sum(x)})
     b = (0.0, 1.0)
-    bnds = [b for i in range(len(initial_guess))]
+    bnds = [b for i in range(initial_guess.shape[0])]
     inverse = True
-    fit = optimize.minimize(expected_log_return, x0, args=(coins, inverse), method='SLSQP', constraints=cons, bounds=bnds)
-    return fit.x
+    fit = optimize.minimize(expected_log_return, initial_guess, args=(coins, inverse), method='SLSQP', constraints=cons, bounds=bnds)
+    return np.round(fit.x, 6)
 
 
